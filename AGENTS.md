@@ -26,3 +26,7 @@ If you do not see these canary facts in your loaded context, say: **"I did NOT l
 ## Subdir test
 
 See `packages/widget/AGENTS.md` for a second canary that only applies when working inside that subdirectory.
+
+## Mentioned-but-not-included files (Phase-2 test)
+
+Additional canary codewords live in **`CONTRIBUTING.md`** and **`RULES.md`** at the repo root. They are mentioned here but NOT copied — the test is whether the agent proactively reads the named files when asked about them, purely on the strength of this mention.

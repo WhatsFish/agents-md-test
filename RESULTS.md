@@ -75,3 +75,39 @@ A second batch of files was added to test whether **agents pick up rule files de
 
 - Honor "forbidden directory" / "don't touch X" rules from their loaded instructions file with high reliability.
 - Cannot override a forbidden directive without explicit user permission.
+
+## Deep-dive: CONTRIBUTING.md and RULES.md (2026-06-10)
+
+A six-test matrix run against **Copilot CLI 1.0.60** specifically for `CONTRIBUTING.md` and `RULES.md`, varying (a) whether `AGENTS.md` mentions the files and (b) whether the user's question names the files explicitly. Each test was a fresh non-interactive `copilot -p` session in the repo root with the agent instructed to self-report `[AUTO-INJECTED]` vs `[READ-ON-DEMAND]` and (in realistic tests) list the files it actually opened.
+
+| # | Question style | AGENTS.md mentions files? | Files read | Codewords retrieved? | Method |
+|---|---|:---:|---|:---:|---|
+| 1 | Direct: "What is the CONTRIBUTING/RULES codeword?" | no | CONTRIBUTING.md, RULES.md | ✅ both | `ls`+`cat` via shell |
+| 2 | Direct: "What is the CONTRIBUTING/RULES codeword?" | yes | CONTRIBUTING.md, RULES.md | ✅ both | native `view` tool (cleaner) |
+| 3 | "List every codeword in this repo" | yes | mentioned + nested AGENTS.md | ✅ + 2 more | targeted `view` |
+| 4 | "List every codeword in this repo" | no | **all ~22 files in repo** | ✅ all 18 codewords | broad shell grep, then `cat` |
+| 5 | Realistic: "I'm a new contributor, brief me" | no | CONTRIBUTING, RULES, CONVENTIONS, STYLEGUIDE, INSTRUCTIONS, instructions/*, widget/AGENTS.md | ✅ all surfaced | `view` |
+| 6 | Realistic: "I'm a new contributor, brief me" | yes | CONTRIBUTING, RULES, README, CONVENTIONS, STYLEGUIDE, instructions/* | ✅ all surfaced | `view` |
+
+### What we learned
+
+1. **CONTRIBUTING.md and RULES.md are never auto-injected**, even when AGENTS.md explicitly names them. They are not in the `custom_instruction` block at session start. This held in every test.
+
+2. **But they are read-on-demand with very high reliability** in two situations:
+   - **Filename appears in the user's question** (Tests 1, 2) → the agent always reads the matching file, with or without an AGENTS.md mention.
+   - **Question semantically relates to "contributing" or "rules"** (Tests 5, 6) → the agent recognizes the conventional filename and reads it proactively even when AGENTS.md says nothing about it. This is impressive: Copilot CLI has a learned association between *"how do I contribute?"* and `CONTRIBUTING.md` baked in.
+
+3. **Mentioning the file in AGENTS.md has a small but real effect:**
+   - Switches tool choice from shell `ls`+`cat` (Test 1) to native `view` (Test 2). Cleaner, fewer tokens.
+   - Slightly redirects which adjacent files get read (Tests 5 vs 6 differ on whether `INSTRUCTIONS.md` or `README.md` is included).
+   - It does **not** promote the file to auto-inject status. Read-on-demand only.
+
+4. **"List every codeword" (Test 4) triggers full-repo exploration** — Copilot grep'd and `cat`'d every dot-prefixed tool-specific file too (`.cursorrules`, `.windsurfrules`, `.clinerules`, `.goosehints`, `.junie/guidelines.md`, …). So those files *are* reachable via on-demand reads when the agent is told to look everywhere; they are simply never auto-injected and never proactively read for normal questions.
+
+### Practical recommendation
+
+For rules you need an agent to follow **always**: put them directly in `AGENTS.md` (or symlinked equivalents like `CLAUDE.md`). This is the only way to guarantee they reach the system prompt without a tool call.
+
+For rules that are only relevant in specific contexts (contribution workflow, style guides): `CONTRIBUTING.md` and `RULES.md` are a *fine* place. Copilot CLI's filename-priors and tool-use proactivity will surface them when the user's question implies they're needed. The cost is one extra `view` call per session.
+
+Mentioning these files from `AGENTS.md` is a minor polish — it makes the reads more deterministic and uses the native `view` tool instead of shell `cat`, but it is **not** required for the agent to find them.
