@@ -12,6 +12,8 @@ Run your AI agent of choice in this directory **without** explicitly telling it 
 
 A passing agent answers with the canary string from `AGENTS.md`. A failing agent guesses or says it doesn't know.
 
+See [`CANDIDATES.md`](./CANDIDATES.md) for the full list of candidate instruction-file conventions under test (CONTRIBUTING.md, .cursorrules, .windsurfrules, .clinerules, .goosehints, etc.) and [`RESULTS.md`](./RESULTS.md) for the empirical matrix.
+
 ## Results (2026-06-09)
 
 Tested with **Copilot CLI 1.0.60** and **Claude Code 2.1.169 (Opus 4.8)**.

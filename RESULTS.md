@@ -22,6 +22,36 @@ Methodology: each mechanism gets a distinct canary codeword in a dedicated file;
 | MCP servers (per-project) | `.mcp.json` | 🟡 via `--additional-mcp-config @.mcp.json` | ✅ auto-loaded | Copilot's per-project MCP autoload is weaker; the main config lives at `~/.copilot/mcp-config.json` |
 | Forbidden-directory directive | rule in instructions file | ✅ honored | ✅ honored | Both refused to read `do-not-touch/SECRET.md` |
 
+## Cross-vendor candidate files (added 2026-06-10)
+
+A second batch of files was added to test whether **agents pick up rule files defined by *other* tools** purely by filename convention. Each file has a unique canary codeword (see [`CANDIDATES.md`](./CANDIDATES.md)). Tested with **Copilot CLI 1.0.60** via `copilot -p` in a fresh non-interactive session, asking the agent to recite codewords it already had in context without reading any files.
+
+| File path | Convention owner | Copilot CLI | Claude Code |
+|---|---|:---:|:---:|
+| `CONTRIBUTING.md` | Universal repo convention | ❌ not auto-loaded | (untested) |
+| `CONVENTIONS.md` | Aider (`--read CONVENTIONS.md`) | ❌ not auto-loaded | (untested) |
+| `.cursorrules` | Cursor (legacy) | ❌ not auto-loaded | (untested) |
+| `.cursor/rules/main.mdc` | Cursor (modern, mdc format) | ❌ not auto-loaded | (untested) |
+| `.windsurfrules` | Windsurf | ❌ not auto-loaded | (untested) |
+| `.clinerules` | Cline | ❌ not auto-loaded | (untested) |
+| `.continue/rules.md` | Continue.dev | ❌ not auto-loaded | (untested) |
+| `.goosehints` | Block Goose | ❌ not auto-loaded | (untested) |
+| `.junie/guidelines.md` | JetBrains Junie | ❌ not auto-loaded | (untested) |
+| `.idx/airules.md` | Google Project IDX | ❌ not auto-loaded | (untested) |
+| `.roo/rules.md` | Roo Code (modern) | ❌ not auto-loaded | (untested) |
+| `.roorules` | Roo Code (legacy) | ❌ not auto-loaded | (untested) |
+| `INSTRUCTIONS.md` | Generic uppercase | ❌ not auto-loaded | (untested) |
+| `RULES.md` | Generic uppercase | ❌ not auto-loaded | (untested) |
+| `STYLEGUIDE.md` | Generic uppercase | ❌ not auto-loaded | (untested) |
+
+**Copilot CLI verdict:** zero cross-vendor pickup. The only auto-injected sources remain `AGENTS.md` (root + nested) plus the lazy-listed `.github/instructions/*.instructions.md` files. When asked to list files in its system prompt, the agent self-reported only `AGENTS.md` and the two `.instructions.md` files — no mention of `.github/copilot-instructions.md` (likely deduplicated because it is symlink/duplicate of `AGENTS.md`).
+
+### Implications
+
+- **Don't rely on `CONTRIBUTING.md` to convey rules to AI agents.** Despite being the most universal "conventions" file in open source, no Copilot CLI auto-load happens.
+- **Tool-specific files only matter to that tool.** `.cursorrules`, `.windsurfrules`, etc. are inert when the user runs a different agent. The convergence on `AGENTS.md` (OpenAI's cross-vendor proposal) is the only practical interop point today.
+- **For broad agent reach, write `AGENTS.md` and symlink everything else to it.** `CLAUDE.md`, `GEMINI.md`, `.github/copilot-instructions.md` → all symlinks to `AGENTS.md`. This matches the existing recommendation in `STRUCTURE_GUIDE.md`.
+
 ¹ Copilot CLI's help text lists `GEMINI.md` as a loaded instruction file, but in our run it self-reported "I haven't read files like GEMINI.md from this working directory." Treat GEMINI.md support as unreliable for Copilot CLI as of 1.0.60.
 
 ## Behavioral nuances worth knowing
