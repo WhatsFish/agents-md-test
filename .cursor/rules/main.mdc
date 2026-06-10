@@ -1,0 +1,9 @@
+---
+description: Canary rule for the modern Cursor rules format
+alwaysApply: true
+---
+
+Modern Cursor rules (`.cursor/rules/*.mdc`). Tests whether non-Cursor agents auto-inject it.
+
+- Cursor-new codeword: CURSORNEW-VIOLET-OTTER-4404
+- Source file: .cursor/rules/main.mdc

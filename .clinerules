@@ -1,0 +1,4 @@
+Cline rules file. Tests whether non-Cline agents auto-inject it.
+
+- Cline codeword: CLINE-MAGENTA-BADGER-6606
+- Source file: .clinerules at repo root

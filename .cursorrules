@@ -1,0 +1,4 @@
+Legacy Cursor rules file. Tests whether non-Cursor agents auto-inject it.
+
+- Cursor-legacy codeword: CURSOR-AMBER-FOX-3303
+- Source file: .cursorrules at repo root

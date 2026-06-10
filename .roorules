@@ -1,0 +1,4 @@
+Roo Code legacy rules file. Tests whether non-Roo agents auto-inject it.
+
+- Roo-legacy codeword: ROOLEG-FUCHSIA-OCELOT-1212
+- Source file: .roorules at repo root

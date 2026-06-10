@@ -1,0 +1,4 @@
+Windsurf rules file. Tests whether non-Windsurf agents auto-inject it.
+
+- Windsurf codeword: WIND-INDIGO-WHALE-5505
+- Source file: .windsurfrules at repo root
