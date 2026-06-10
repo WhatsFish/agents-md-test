@@ -68,6 +68,56 @@ One sentence on the project + tech stack.
 - Start dev server: `<command>`
 ```
 
+### Where each kind of content belongs (Copilot best practice, 2026-06-10)
+
+Based on the empirical results in [`RESULTS.md`](./RESULTS.md), use this decision table to keep `AGENTS.md` small, ensure rules actually reach the model, and avoid duplication:
+
+| Content type | Put it in | Why |
+|---|---|---|
+| **Always-applicable hard rules** — build/test/lint commands, forbidden directories, commit conventions, core project context | `AGENTS.md` (root) | Only file Copilot CLI auto-injects into the system prompt; symlink `.github/copilot-instructions.md` → `AGENTS.md` so GitHub.com Chat, Coding Agent, and VS Code Chat all see the same content |
+| **Subproject-only rules** (monorepo) | `<subdir>/AGENTS.md` | Copilot CLI auto-merges nested AGENTS.md when cwd enters the subdir. Web/Coding Agent surfaces don't see them, so add a pointer in root AGENTS.md ("see `packages/x/AGENTS.md`") |
+| **File-type-scoped style rules** (Python conventions, React idioms, test patterns) | `.github/instructions/<name>.instructions.md` with `applyTo:` frontmatter | Lazy-loaded: Copilot lists them at startup but only fetches content when a matching file enters context. Doesn't bloat every session. Recognized by VS Code Chat and Coding Agent too |
+| **Contribution workflow** (PR process, branch naming, code-review etiquette, CLA) | `CONTRIBUTING.md` | Human-first; Copilot reads on demand when the user asks something contribution-related, with high reliability. Do NOT duplicate into `AGENTS.md` |
+| **Invocable "skills" / canned workflows** ("write PR description", "triage incident", "generate release notes") | `.github/prompts/<name>.prompt.md` | Copilot equivalent of Claude slash commands; user triggers explicitly. Not auto-injected, called on demand |
+| **Tooling / data-source integrations** | MCP server: `~/.copilot/mcp-config.json` (user-global) or `--additional-mcp-config @.mcp.json` (per project) | Copilot's per-project MCP autoload is weaker than Claude's `.mcp.json` |
+| **Coding Agent cloud env** (preinstalled deps, network allowlist) | `copilot-setup-steps.yml` | Only consumed by Coding Agent runner; CLI ignores |
+| **Cross-repo shared knowledge bases** (org-wide architecture, domain docs, decision records) | **Copilot Spaces** (github.com UI) | Reusable across many repos; avoid copy-pasting into every repo |
+| **Per-developer personal preferences** ("I use single quotes", "branch prefix my-username") | `~/.copilot/copilot-instructions.md` (user-global) or Copilot Memory | Belongs to the person, not the repo |
+| **Long-form architecture / ADRs / domain explainers** | Regular `docs/*.md` | Agent will grep when relevant; do NOT inline into `AGENTS.md` — every token there is paid on every turn |
+
+### Anti-patterns
+
+1. **Copy-pasting `AGENTS.md` into `.github/copilot-instructions.md`.** Use a symlink so there's one source of truth.
+2. **Inlining language-specific rules into `AGENTS.md`.** They get auto-injected even when nobody is editing that language. Use `.github/instructions/` with `applyTo:` globs instead.
+3. **Putting must-follow rules only in `CONTRIBUTING.md`.** Filename priors make on-demand reads likely but not guaranteed. Hard rules belong in `AGENTS.md` (auto-inject); `CONTRIBUTING.md` is for human-facing process prose.
+4. **Stuffing the entire onboarding tour into `AGENTS.md`.** Aim for ≤ 50 lines: one-line project summary, build/test/lint commands, hard constraints, and pointers (`see CONTRIBUTING.md`, `see docs/architecture.md`, `see packages/*/AGENTS.md`, `see .github/instructions/`). Push detail into the linked files; the agent will read them when needed.
+
+### Ideal `AGENTS.md` skeleton
+
+```markdown
+# my-project
+
+One-sentence what-this-is.
+
+## Build / test / lint
+- Build: `make build`
+- Test: `make test`
+- Lint: `make lint`
+
+## Hard rules
+- Never read or write `secrets/` or `do-not-touch/`.
+- Every commit message ends with `Signed-off-by: <name>`.
+- All Python code must pass `ruff check && mypy`.
+
+## More
+- Contribution flow & PR etiquette → `CONTRIBUTING.md`
+- Architecture & ADRs → `docs/architecture.md`, `docs/adr/`
+- Language-specific rules → `.github/instructions/`
+- Subproject specifics → `packages/<x>/AGENTS.md`
+- Invocable workflows → `.github/prompts/`
+```
+
+
 ---
 
 ## Scenario 2 — Claude + Copilot shared repo
